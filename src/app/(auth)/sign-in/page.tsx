@@ -15,6 +15,8 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const supabase = createClient();
 
@@ -35,9 +37,19 @@ export default function SignInPage() {
         options: { emailRedirectTo: `${location.origin}/auth/callback` },
       });
       if (error) setError(error.message);
-      else setMessage("Check your email to confirm your account!");
+      else setShowOtp(true);
     }
 
+    setLoading(false);
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "signup" });
+    if (error) setError(error.message);
+    else window.location.href = "/";
     setLoading(false);
   };
 
@@ -47,6 +59,58 @@ export default function SignInPage() {
       options: { redirectTo: `${location.origin}/auth/callback` },
     });
   };
+
+  if (showOtp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="w-full max-w-md p-8 space-y-6 bg-zinc-900 rounded-xl shadow-2xl">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-14 h-14 bg-indigo-600 rounded-full flex items-center justify-center">
+              <MessageSquare className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-zinc-100">Check your email</h1>
+            <p className="text-zinc-400 text-sm text-center">
+              We sent a 6-digit code to <span className="text-zinc-200">{email}</span>
+            </p>
+          </div>
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="otp" className="text-zinc-300">Verification Code</Label>
+              <Input
+                id="otp"
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+                required
+              />
+            </div>
+            {error && <p className="text-red-400 text-sm">{error}</p>}
+            <Button
+              type="submit"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              disabled={loading || otp.length !== 6}
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Verify Email
+            </Button>
+          </form>
+          <p className="text-center text-sm text-zinc-400">
+            Didn&apos;t receive it?{" "}
+            <button
+              type="button"
+              onClick={() => { setShowOtp(false); setOtp(""); setError(null); }}
+              className="text-indigo-400 hover:text-indigo-300 font-medium"
+            >
+              Go back
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950">
