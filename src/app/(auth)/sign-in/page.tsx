@@ -80,9 +80,9 @@ export default function SignInPage() {
                 id="otp"
                 type="text"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
                 placeholder="000000"
-                maxLength={6}
+                maxLength={8}
                 className="text-center text-2xl tracking-widest"
                 required
               />
@@ -91,7 +91,7 @@ export default function SignInPage() {
             <Button
               type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-              disabled={loading || otp.length !== 6}
+              disabled={loading || otp.length < 6}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Verify Email
